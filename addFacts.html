@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Facts</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <style>
+        body {
+            margin: 0px;
+            background-color: darkseagreen;
+        }
+        #game {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        }
+        #controlPanel {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            font-size: 5vh;
+            font-weight: bold;
+        }
+        #questionArea {
+            flex: 3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 30vmin;
+        }
+        #answerArea {
+            flex: 1;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+        .choice {
+            background-color: cornflowerblue;
+            color: white;
+            border-radius: 10%;
+            padding: 10px;
+            text-align: center;
+            font-size: 5vw;
+        }
+        #praise {
+            position: absolute;
+            right: 0px;
+            top: 20%;
+            width: 300px;
+        }
+        #gameOver {
+            position: absolute;
+            left: 35%;
+            top: 20%;
+            width: 30%;
+        }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <div id="controlPanel">
+            <button id="playButton" class="btn btn-primary">Play</button>
+            <div id="timeLeft">
+                <span>Time Left: </span>
+                <span id="timeLeftSpan"></span>
+            </div>
+            <div id="currentScore">
+                <span>Current Score: </span>
+                <span id="currentScoreSpan"></span>
+            </div>
+            <div id="highScore">
+                <span>High Score: </span>
+                <span id="highScoreSpan"></span>
+            </div>
+        </div>
+        <div id="questionArea">
+            <div id="problemArea">
+                <span id="addend1"></span>
+                <span id="operand">Press "Play"</span>
+                <span id="addend2"></span>
+            </div>
+        </div>
+        <div id="answerArea">
+            <div class="choice">11</div>
+            <div class="choice">12</div>
+            <div class="choice">13</div>
+            <div class="choice">14</div>
+            <div class="choice">15</div>
+            <div class="choice">16</div>
+            <div class="choice">17</div>
+            <div class="choice">18</div>
+        </div>
+        <img id="praise">
+        <img id="gameOver">
+    </div>
+
+    <script>
+        let highScore = 0;
+        class Game {
+            constructor(time) {
+                this.time = time;
+                this.timeLeft = time;
+                this.problems = [];
+                this.timer = null;
+                this.score = 0;
+                this.level = 0;
+                this.playButton = document.getElementById("playButton");
+                this.playButton.game = this;
+                this.playButton.addEventListener('click', this.playGame, false);
+                this.pictures = ["great", "yes", "awesome", "congrats", "cool", "bravo", "wellDone", "wayToGo"];
+            }
+            setUp(){
+                //Reset the current score to 0;
+                this.setCurrentScore(0);
+                //Reset the timer
+                document.getElementById("timeLeftSpan").textContent = this.time.toString();
+                this.timeLeft = this.time;
+                //Set the operand
+                document.getElementById("operand").textContent = " + ";
+                //remove the game over sign
+                document.getElementById("gameOver").removeAttribute("src");
+            }
+            setCurrentScore(currentScore) {
+                this.score = currentScore;
+                document.getElementById("currentScoreSpan").textContent = this.score.toString();
+            }
+            advanceTimer() {
+                if(this.game.timeLeft == 1) {
+                    clearInterval(game.timer);
+                    //Enable the Play button
+                    document.getElementById("playButton").addEventListener('click', this.game.playGame, false);
+                    document.getElementById("playButton").disabled = false;
+                    document.getElementById("playButton").textContent = "Play Again";
+                    //Disable the choices for the current problem
+                    let problem = this.game.problems[this.game.problems.length - 1];
+                    for(let choice of problem.choices) {
+                        choice.element.removeEventListener('click', problem.respondToChoice, false);
+                    }
+                    document.getElementById("gameOver").setAttribute("src", "gameOver.png");
+                }
+                this.game.timeLeft--;
+                document.getElementById("timeLeftSpan").textContent = this.game.timeLeft;
+
+            }
+            playGame() {
+                //Disable the Play button
+                this.game.playButton.removeEventListener('click', this.game.playGame, false);
+                this.game.playButton.disabled = true;
+                //set up the game
+                this.game.setUp();
+                //start the timer
+                this.game.timer = setInterval(this.game.advanceTimer, 1000);
+                //play a round
+                this.game.playRound();
+            }
+            playRound() {
+                //create a problem
+                let problem = new Problem(Math.floor(5 * Math.random()) + 5, this);
+                //make sure this new problem is not exactly the same as the last problem
+                let lastProblem = this.problems[this.problems.length -1];
+                while(lastProblem && lastProblem.addend1 === problem.addend1 && lastProblem.addend2 === problem.addend2) {
+                    problem = new Problem(Math.floor(5 * Math.random()) + 5, this);
+                }
+                this.problems.push(problem);
+                problem.publish();
+                problem.createChoices();
+            }
+        }
+        class Problem {
+            constructor(addend1, thisGame) {
+                this.addend1 = addend1;
+                this.game = thisGame;
+                let min = 11 - this.addend1;
+                let max = 9;
+                this.addend2 = Math.floor(Math.random() * (max - min + 1)) + min;
+                this.choices = [];
+            };
+            publish () {
+                document.getElementById("addend1").textContent = this.addend1.toString();
+                document.getElementById("addend2").textContent = this.addend2.toString();
+            }
+            createChoices() {
+                for(let choice of document.getElementsByClassName("choice")) {
+                    this.choices.push(new Choice(this, choice));
+                }
+            }
+            //"this" is the element that was clicked on
+            respondToChoice() {
+                let correctAnswer = this.problem.addend1 + this.problem.addend2;
+                //if the user got the answer wrong
+                if(correctAnswer !== Number(this.textContent)) {
+                    //highlight the chosen answer as incorrect
+                    this.choice.highlightIncorrect(this);
+                    //decrement the score
+                    this.problem.game.score--;
+                    document.getElementById("currentScoreSpan").textContent = this.problem.game.score.toString();
+                    return;
+                }
+                //if the user got the answer correct, highlight the answer as correct
+                this.choice.highlightCorrect(this);
+                //deacivate the choices
+                for(let choice of this.problem.choices) {
+                    choice.element.removeEventListener('click', this.problem.respondToChoice, false)
+                }
+                //increment the score
+                this.problem.game.score++;
+                //update the score on the page
+                this.problem.game.setCurrentScore(this.problem.game.score);
+                //update the high score if needed
+                highScore = Math.max(game.score, highScore);
+                document.getElementById("highScoreSpan").textContent = highScore.toString();
+                //play another round
+                this.problem.game.playRound();
+            }
+        }class Choice {
+            constructor(problem, element) {
+                this.problem = problem;
+                this.element = element;
+                element.problem = problem;
+                element.choice = this;
+                element.addEventListener('click', element.problem.respondToChoice, false);
+            }
+            highlightCorrect(element) {
+                element.style.setProperty("background-color", "white");
+                element.style.setProperty("color", "black");
+                let pictures = element.choice.problem.game.pictures;
+                let picture = pictures[Math.floor(pictures.length * Math.random())]
+                document.getElementById("praise").setAttribute("src", picture + ".png");
+                setTimeout(function() {element.choice.turnOffHighlight(element, true)}, 1000);
+            }
+            highlightIncorrect(element) {
+                element.style.setProperty("background-color", "red");
+                setTimeout(function() {element.choice.turnOffHighlight(element, false)}, 1000);
+            }
+            turnOffHighlight(element, correctChoice) {
+                element.removeAttribute("style");
+                if(correctChoice) {
+                    document.getElementById("praise").removeAttribute("src");
+                }
+            }
+        }
+        //set up a 30-second game
+        window.game = new Game(30);
+        
+    </script>
+</body>
+</html>
