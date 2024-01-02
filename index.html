@@ -61,6 +61,9 @@
             top: 20%;
             width: 30%;
         }
+        img {
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -97,8 +100,8 @@
             <div class="choice">17</div>
             <div class="choice">18</div>
         </div>
-        <img id="praise">
-        <img id="gameOver">
+        <div id="praise"></div>
+        <div id="gameOver"></div>
     </div>
 
     <script>
@@ -124,8 +127,11 @@
                 this.timeLeft = this.time;
                 //Set the operand
                 document.getElementById("operand").textContent = " + ";
-                //remove the game over sign
-                document.getElementById("gameOver").removeAttribute("src");
+                //remove the game over sign if there is one
+                let gameOver = document.getElementById("gameOver");
+                if(gameOver.children.length === 1) {
+                    gameOver.removeChild(gameOver.getElementsByTagName("img")[0]);
+                }
             }
             setCurrentScore(currentScore) {
                 this.score = currentScore;
@@ -143,7 +149,9 @@
                     for(let choice of problem.choices) {
                         choice.element.removeEventListener('click', problem.respondToChoice, false);
                     }
-                    document.getElementById("gameOver").setAttribute("src", "gameOver.png");
+                    let gameOver = document.createElement("img");
+                    gameOver.setAttribute("src", "gameOver.png");
+                    document.getElementById("gameOver").appendChild(gameOver);
                 }
                 this.game.timeLeft--;
                 document.getElementById("timeLeftSpan").textContent = this.game.timeLeft;
@@ -232,7 +240,9 @@
                 element.style.setProperty("color", "black");
                 let pictures = element.choice.problem.game.pictures;
                 let picture = pictures[Math.floor(pictures.length * Math.random())]
-                document.getElementById("praise").setAttribute("src", picture + ".png");
+                let praise = document.createElement("img");
+                praise.setAttribute("src", picture + ".png");
+                document.getElementById("praise").appendChild(praise);
                 setTimeout(function() {element.choice.turnOffHighlight(element, true)}, 1000);
             }
             highlightIncorrect(element) {
@@ -242,7 +252,7 @@
             turnOffHighlight(element, correctChoice) {
                 element.removeAttribute("style");
                 if(correctChoice) {
-                    document.getElementById("praise").removeAttribute("src");
+                    document.getElementById("praise").removeChild(document.getElementById("praise").getElementsByTagName("img")[0]);
                 }
             }
         }
