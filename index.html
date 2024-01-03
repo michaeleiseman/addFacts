@@ -174,6 +174,7 @@
                     let problem = this.game.problems[this.game.problems.length - 1];
                     for(let choice of problem.choices) {
                         choice.element.removeEventListener('click', problem.respondToChoice, false);
+                        choice.element.style.setProperty("cursor", "default");
                     }
                     let gameOver = document.createElement("img");
                     gameOver.setAttribute("src", "gameOver.png");
@@ -241,7 +242,8 @@
                 this.choice.highlightCorrect(this);
                 //deacivate the choices
                 for(let choice of this.problem.choices) {
-                    choice.element.removeEventListener('click', this.problem.respondToChoice, false)
+                    choice.element.removeEventListener('click', this.problem.respondToChoice, false);
+                    choice.element.style.setProperty("cursor", "default");
                 }
                 //increment the score
                 this.problem.game.score++;
@@ -260,6 +262,7 @@
                 element.problem = problem;
                 element.choice = this;
                 element.addEventListener('click', element.problem.respondToChoice, false);
+                element.style.setProperty("cursor", "pointer");
             }
             highlightCorrect(element) {
                 element.style.setProperty("background-color", "white");
